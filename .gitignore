@@ -1,0 +1,7 @@
+# Ignore Excel files to avoid pushingsensitive data
+weight_tracker.xlsx
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
