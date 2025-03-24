@@ -70,8 +70,8 @@ class WeightTrackerApp:
             existing_data = pd.read_excel(filename)
             
             #convert 'date' column to datetime format
-            existing_data['Date'] = pd.to_datetime(existing_data['Date'])
-            new_data['Date'] = pd.to_datetime(new_data['Date'])
+            existing_data['Date'] = pd.to_date(existing_data['Date']).dt.date
+            new_data['Date'] = pd.to_date(new_data['Date']).dt.date
 
             #get the first date in existing file 
             most_recent_date = existing_data['Date'].max()
@@ -113,7 +113,31 @@ class WeightTrackerApp:
         #Insert data into the treeview 
         for _, row in df.iterrows():
             tree.insert("", tk.END, values=(row['Date'], row['Weight']))
-    
+        
+        def delete_selected():
+            selected_item = tree.selection()
+            if not selected_item:
+                messagebox.showwarning("Warning", "Please select an entry to delete.")
+                return 
+            
+            selected_values = tree.item(selected_item,"values")
+            selected_date, selected_weight = selected_values
+
+            confirm = messagebox.askyesno("Delete Entry", f"Are you sure you want to delete the entry?\nDate: {selected_date}\nWeight: {selected_weight}")
+            if not confirm:
+                return
+            
+            df_filtered = df[~((df['Date'] == selected_date) & (df['Weight']==float(selected_weight)))]
+
+            df_filtered.to_excel(filename,index=False)
+
+            tree.delete(selected_item)
+
+            messagebox.showinfo("Deleted","Entry successfully deleted!")
+        
+        delete_button = tk.Button(records_window, text="Delete Selected Entry", command=delete_selected)
+        delete_button.pack(pady=5)
+
     def plot_weight_trend(self):
         #plots the weight trend over time 
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -127,7 +151,7 @@ class WeightTrackerApp:
         df = pd.read_excel(filename)
 
         # Convert 'Date' to datetime for sorting
-        df['Date'] = pd.to_datetime(df['Date'])
+        df['Date'] = pd.to_datetime(df['Date']).dt.date
         df = df.sort_values(by="Date")
 
         # Create a new window for the plot
